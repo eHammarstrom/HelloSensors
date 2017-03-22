@@ -30,6 +30,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     private TextView txtGyroStatus;
     private TextView txtAccelStatus;
     private TextView txtMagneto;
+    private TextView txtPitch;
     private TextView txtXRads;
     private TextView txtYRads;
     private TextView txtZRads;
@@ -39,6 +40,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
 
     private final static float LIN_ACCEL_DELTA = 1.5f;
     private final static int LIN_SENSOR_DELAY = 250000;
+    private final static float PITCH_DEG_DELTA = 10f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +51,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
         txtAccelStatus = (TextView) findViewById(R.id.txtAccelStatus);
         imgCompass = (ImageView) findViewById(R.id.imgCompass);
         txtMagneto = (TextView) findViewById(R.id.txtMagneto);
+        txtPitch = (TextView) findViewById(R.id.txtPitch);
         txtXRads = (TextView) findViewById(R.id.txtXRads);
         txtYRads = (TextView) findViewById(R.id.txtYRads);
         txtZRads = (TextView) findViewById(R.id.txtZRads);
@@ -147,6 +150,15 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
 
             imgCompass.startAnimation(ra);
             currentDeg = -azimuthInDegress;
+
+            float pitch = orientation[1] * 180f / (float) Math.PI;
+            if (pitch > PITCH_DEG_DELTA) {
+                txtPitch.setText("Front tilt: " + pitch + " degrees");
+            } else if(pitch < -PITCH_DEG_DELTA) {
+                txtPitch.setText("Back tilt: " + pitch + " degrees");
+            } else {
+                txtPitch.setText("No tilt.");
+            }
         }
     }
 
