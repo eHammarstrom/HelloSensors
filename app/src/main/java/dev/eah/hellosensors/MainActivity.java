@@ -1,6 +1,5 @@
 package dev.eah.hellosensors;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,6 +35,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnSensors.setOnClickListener(new btnSensorsListener());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
     }
 
     private class btnSensorsListener implements View.OnClickListener {
