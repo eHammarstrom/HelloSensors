@@ -1,9 +1,12 @@
 package dev.eah.hellosensors;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.hardware.SensorEventListener;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.animation.Animation;
@@ -17,6 +20,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     private Sensor mSensorLinAccel;
     private Sensor mSensorAccel;
     private Sensor mSensorMagneto;
+    private Vibrator vibrator;
 
     private float currentDeg = 0f;
     private float[] accelArr = new float[3];
@@ -41,6 +45,8 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     private final static float LIN_ACCEL_DELTA = 1.5f;
     private final static int LIN_SENSOR_DELAY = 250000;
     private final static float PITCH_DEG_DELTA = 10f;
+    private final static int PERMISSIONS_ID = 1337;
+    private final static float LOWPASS_ALPHA = 0.33f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,10 +71,18 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
         mSensorAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mSensorMagneto = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+
         mSensorManager.registerListener(this, mSensorGyro, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mSensorLinAccel, LIN_SENSOR_DELAY);
         mSensorManager.registerListener(this, mSensorAccel, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mSensorMagneto, SensorManager.SENSOR_DELAY_GAME);
+
+        if (checkSelfPermission(Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED) {
+            // need to get permission
+
+            requestPermissions(new String[]{Manifest.permission.VIBRATE}, PERMISSIONS_ID);
+        }
     }
 
     @Override
@@ -125,10 +139,14 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
                     event.values[1] + "\n" +
                     event.values[2]);
 
-            System.arraycopy(event.values, 0, magnetoArr, 0, event.values.length);
+            magnetoArr = lowPass(event.values.clone(), magnetoArr);
+
+            // System.arraycopy(event.values, 0, magnetoArr, 0, event.values.length);
             hasMagnetoArr = true;
         } else if (event.sensor == mSensorAccel) {
-            System.arraycopy(event.values, 0, accelArr, 0, event.values.length);
+            accelArr = lowPass(event.values.clone(), accelArr);
+
+            //System.arraycopy(event.values, 0, accelArr, 0, event.values.length);
             hasAccelArr = true;
         }
 
@@ -159,7 +177,25 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
             } else {
                 txtPitch.setText("No tilt.");
             }
+
+            if (checkSelfPermission(Manifest.permission.VIBRATE) == PackageManager.PERMISSION_GRANTED) {
+                if (-currentDeg < 15 || -currentDeg > 345) {
+                    vibrator.vibrate(500);
+                } else if (-currentDeg < 45 || -currentDeg > 315) {
+                    vibrator.vibrate(2);
+                }
+            }
         }
+    }
+
+    private float[] lowPass(float[] input, float[] output) {
+        if (output == null) return input;
+
+        for (int i = 0; i < input.length; i++) {
+            output[i] = output[i] + LOWPASS_ALPHA * (input[i] - output[i]);
+        }
+
+        return output;
     }
 
     @Override
