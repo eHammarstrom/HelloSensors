@@ -46,7 +46,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     private final static int LIN_SENSOR_DELAY = 250000;
     private final static float PITCH_DEG_DELTA = 10f;
     private final static int PERMISSIONS_ID = 1337;
-    private final static float LOWPASS_ALPHA = 0.33f;
+    private final static float LOWPASS_ALPHA = 0.10f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
